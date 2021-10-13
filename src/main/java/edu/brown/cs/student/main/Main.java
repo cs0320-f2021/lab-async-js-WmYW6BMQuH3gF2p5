@@ -14,8 +14,10 @@ import freemarker.template.Configuration;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.json.JSONException;
 import spark.*;
 import spark.template.freemarker.FreeMarkerEngine;
+import org.json.JSONObject;
 
 /**
  * The Main class of our project. This is where execution begins.
@@ -122,6 +124,7 @@ public final class Main {
     Spark.get("/autocorrect", new AutocorrectHandler(), freeMarker);
     //TODO: create a call to Spark.post to make a post request to a url which
       // will handle getting autocorrect results for the input
+      Spark.post("/autocorrect", new ResultsHandler());
   }
 
   /**
@@ -159,16 +162,17 @@ public final class Main {
      */
     private static class ResultsHandler implements Route {
         @Override
-        public String handle(Request req, Response res) {
+        public String handle(Request req, Response res) throws JSONException {
             //TODO: Get JSONObject from req and use it to get the value of the input you want to
             // generate suggestions for
-
+            JSONObject jsonObj = new JSONObject(req.body());
+            String acEntry = jsonObj.getString("text");
             //TODO: use the global autocorrect instance to get the suggestions
-
+            Set<String> suggestions = ac.suggest(acEntry);
             //TODO: create an immutable map using the suggestions
-
+            Map vars = ImmutableMap.of(acEntry, suggestions);
             //TODO: return a Json of the suggestions (HINT: use the GSON.Json())
-            return null;
+            return GSON.toJson(vars);
         }
     }
 }
